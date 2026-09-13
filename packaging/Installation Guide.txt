@@ -1,0 +1,19 @@
+RightClick Converter 0.6
+
+System requirements: Apple Silicon Mac running macOS 13 or later.
+
+Installation:
+1. Double-click “RightClick Converter Installer.pkg”.
+2. If macOS prevents it from opening, go to:
+   System Settings → Privacy & Security → Open Anyway.
+3. After installation, select a video or audio file in Finder.
+4. Right-click a video and choose Extract Audio As…, or right-click an audio file and choose Convert Audio To…; then select MP3, M4A, or WAV.
+
+No additional window will appear after you select a format. The converted file will be created next to the original file.
+If the right-click menu does not appear, go to “System Settings → General → Login Items & Extensions → File Providers”,
+make sure Finder Audio Tools is enabled, then reopen the Finder window.
+
+The first 5 conversions are free. After that, a one-time purchase unlocks unlimited use. All conversions are performed locally on your Mac, and your files are never uploaded.
+This is a test version that has not yet been signed or notarized with an Apple Developer ID.
+
+Uninstallation: Move “RightClick Converter.app” to the Trash.
