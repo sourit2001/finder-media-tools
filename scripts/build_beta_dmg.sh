@@ -38,7 +38,6 @@ dmg_path="${dist_directory}/RightClick-Converter-${version}.dmg"
     "${pkg_path}"
 
 /usr/bin/ditto "${pkg_path}" "${dmg_source_directory}/RightClick Converter Installer.pkg"
-/bin/cp "${project_directory}/packaging/安装说明.txt" "${dmg_source_directory}/安装说明.txt"
 /bin/cp "${project_directory}/packaging/Installation Guide.txt" "${dmg_source_directory}/Installation Guide.txt"
 
 /usr/bin/xattr -cr "${dmg_source_directory}" 2>/dev/null || true
