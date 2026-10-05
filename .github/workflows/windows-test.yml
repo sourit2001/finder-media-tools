@@ -1,4 +1,4 @@
-name: Windows test package
+name: Windows portable package
 on:
   pull_request:
     paths:
@@ -24,12 +24,17 @@ jobs:
         run: |
           dotnet run --project windows/tests/Conversion.Tests.csproj -- "$PWD\windows\vendor\ffmpeg\ffmpeg.exe"
           if ($LASTEXITCODE -ne 0) { throw 'Conversion tests failed.' }
-      - name: Build and sign private test package
+      - name: Build portable application
         shell: powershell
-        run: .\windows\scripts\Build.ps1 -FFmpegDirectory "$PWD\windows\vendor\ffmpeg"
+        run: .\windows\scripts\Build-Portable.ps1 -FFmpegDirectory "$PWD\windows\vendor\ffmpeg"
+      - name: Verify portable window
+        shell: powershell
+        run: .\windows\scripts\Smoke-Portable.ps1
       - uses: actions/upload-artifact@v4
         with:
           name: ConvertRight-Windows-0.1.0-x64
-          path: windows/out/ConvertRight-Windows-0.1.0-x64.zip
+          path: |
+            windows/out/ConvertRight-Windows-0.1.0-x64.zip
+            windows/out/portable-window.png
           if-no-files-found: error
           retention-days: 14

@@ -1,54 +1,18 @@
-# Windows 11 测试指南
+# ConvertRight for Windows 11
 
-这是私人测试包，支持 Windows 11、Intel/AMD 64 位电脑。尚未验证 ARM Windows。
+1. Extract the entire ZIP to a folder you want to keep, such as Documents\ConvertRight.
+2. Open ConvertRight.exe. No installer, .NET installation, administrator permission, or certificate installation is required.
+3. Drag audio or video files into the window, choose MP3, M4A or WAV, then click Convert.
+4. Converted files appear alongside the originals. Existing files are never overwritten. Double-click a completed result to reveal it in File Explorer.
 
-## 安装
+The app includes five free successful conversions. Windows and Mac purchases are separate. Windows purchases will become available after the Windows payment service is released.
 
-1. 解压测试 ZIP 到一个文件夹，双击 `Install.cmd`。
-2. Windows 会请求管理员权限，以信任本测试包的开发证书。
-3. 看到 Installed 后，关闭并重新打开文件资源管理器。
-4. 找一个视频文件，右键查看 ConvertRight，选择 MP3 / M4A / WAV。
-5. 新文件应出现在原视频旁，不需要打开转换窗口。
+## Optional right-click menu
 
-如果右键菜单没有出现，先注销 Windows 并重新登录，再检查。
-不要修改系统设置来强制使用旧版右键菜单。
+Click **Enable right-click menu** in the window. In File Explorer, select your files, right-click, then choose **Show more options → ConvertRight** and an output format. This registers the menu only for your Windows account; it does not need administrator permission.
 
-测试包提供五次免费转换，按成功生成的文件数计数；付款入口暂时关闭。
-先测三个格式，再测两个文件的多选，就能完成五次基础测试。
-转换较大的视频可能需要等待，失败时会显示提示。
+Keep the application folder in place while using the menu. After moving it, open the app and enable the menu again. To stop using the menu, click **Remove right-click menu** before deleting the folder. Your conversion history and license are stored in `%LOCALAPPDATA%\ConvertRight`.
 
-## 请记录这些结果
+The executable is currently unsigned. Windows may show a reputation warning for downloaded software. It does not require installing a certificate or changing system security settings.
 
-| 检查 | 预期 |
-| --- | --- |
-| Windows 11 新右键菜单 | 能看到 ConvertRight 与三个格式 |
-| 视频 → MP3 / M4A / WAV | 输出存在且能播放 |
-| 一次选择两个文件 | 分别生成两个音频 |
-| 中文、空格、括号文件名 | 能转换 |
-| 文件夹已经有同名输出 | 使用 `_1` 等后缀，不覆盖 |
-| 选中图片、文件夹 | 不出现转换入口 |
-| 没有音轨的视频 | 提示失败，不留下空音频 |
-| 原文件 | 没有被修改或删除 |
-| 第六次转换 | 提示试用结束，不打开真实付款 |
-| 普通更新 / 卸载重装 | 不重置试用额度 |
-
-五次额度不足以手动覆盖全部检查。开发者可运行引擎测试，不消耗试用额度。
-请先返回基础五次的结果，再由开发者提供后续专项测试构建。
-
-## 出错时
-
-保留错误提示和 `%LOCALAPPDATA%\ConvertRight\conversion.log`。
-反馈电脑处理器类型、Windows 版本（运行 `winver`）、安装是否成功、哪个文件/格式失败。
-日志可能含本地文件名；发送前可以遮去私人路径。不要发送 `license-v1.json`。
-
-## 卸载
-
-Windows 设置 → 应用 → 已安装的应用 → ConvertRight → 卸载。
-也可用 PowerShell 运行同目录的 `Uninstall.ps1`。
-购买标识与试用记录保留，以便重装后恢复。
-
-测试结束后，可在管理员运行的 `certlm.msc` 中进入“受信任的人 → 证书”，
-删除 `ConvertRight Development` 的测试证书。不要删除其他证书。
-
-公开发行前还需单独验收：正式签名安装、支付成功后自动激活、Mac/Windows
-授权互不通用、退款后授权撤销，以及已购买用户的断网转换。
+FFmpeg is bundled so conversion works offline. Its license texts and source information are included in the licenses folder and FFMPEG-SOURCE.txt.

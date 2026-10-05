@@ -33,26 +33,26 @@ internal static class Program
     [STAThread]
     private static int Main(string[] args)
     {
-        using var gate = new Mutex(false, @"Local\ConvertRight.Windows.Worker.v1");
-        var acquired = false;
-        try
-        {
-            Directory.CreateDirectory(DataDirectory);
-            try { acquired = gate.WaitOne(TimeSpan.FromSeconds(5)); }
-            catch (AbandonedMutexException) { acquired = true; }
-            if (!acquired) { Message("Another conversion is running. Please wait for it to finish, then try again."); return 2; }
-            return Run(args).GetAwaiter().GetResult();
-        }
-        catch (Exception error)
-        {
-            try { Log(error.ToString()); } catch (IOException) { } catch (UnauthorizedAccessException) { }
-            Message($"{error.Message}\n\nFor help, see the log in:\n{DataDirectory}");
-            return 1;
-        }
-        finally { if (acquired) gate.ReleaseMutex(); }
+        Directory.CreateDirectory(DataDirectory);
+        ApplicationConfiguration.Initialize();
+        if (args.Length == 0) { Application.Run(new MainWindow()); return 0; }
+        try { return Run(args).GetAwaiter().GetResult(); }
+        catch (Exception error) { Message(error.Message); return 1; }
     }
 
-    private static LicenseState Load()
+    internal static async Task<string> ConvertFile(string input, string format)
+    {
+        // A semaphore file protects license accounting across GUI and Explorer processes.
+        using var lease = new FileStream(Path.Combine(DataDirectory, "conversion.lock"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+        var state = Load();
+        if (!await Authorize(state, 1)) throw new IOException("Conversion was not authorized. Check your free conversions or purchase status.");
+        var result = await Conversion.Run(Path.Combine(AppContext.BaseDirectory, "ffmpeg.exe"), input, format);
+        if (state.ActivationToken is null) { state.Used++; Save(state); }
+        Log($"Created: {result}");
+        return result;
+    }
+
+    internal static LicenseState Load()
     {
         if (!File.Exists(StatePath)) { var fresh = new LicenseState(); Save(fresh); return fresh; }
         var state = JsonSerializer.Deserialize<LicenseState>(File.ReadAllText(StatePath), JsonOptions)
@@ -133,9 +133,7 @@ internal static class Program
         {
             try
             {
-                var result = await Conversion.Run(ffmpeg, input, format);
-                Log($"Created: {result}");
-                if (state.ActivationToken is null) { state.Used++; Save(state); }
+                var result = await ConvertFile(input, format);
             }
             catch (Exception error) { Log($"Failed: {input}: {error}"); failures.Add(Path.GetFileName(input)); }
         }
@@ -143,7 +141,7 @@ internal static class Program
         return failures.Count == 0 ? 0 : 1;
     }
 
-    private static async Task<bool> Authorize(LicenseState state, int count)
+    internal static async Task<bool> Authorize(LicenseState state, int count)
     {
         if (state.ActivationToken is not null)
         {
@@ -171,7 +169,7 @@ internal static class Program
         // Test builds never initiate a real payment against an undeployed backend.
         if (!File.Exists(Path.Combine(AppContext.BaseDirectory, "payments-enabled.txt")))
         {
-            Message("Your five free conversions are complete. This test build does not accept payments yet.");
+            Message("Your five free conversions are complete. Windows purchases are not available yet. Your existing files and completed conversions remain available.");
             return false;
         }
         if (MessageBoxW(IntPtr.Zero, "Your five free conversions are complete.\nPay $1 once to unlock this Windows PC. Mac licenses are purchased separately.\n\nContinue to payment?", "ConvertRight", 0x24) == 6)
