@@ -1,0 +1,35 @@
+name: Windows test package
+on:
+  pull_request:
+    paths:
+      - 'windows/**'
+      - '.github/workflows/windows-test.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-2025
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Prepare pinned FFmpeg
+        shell: powershell
+        run: .\windows\scripts\Prepare-FFmpeg.ps1
+      - name: Test real audio conversion
+        shell: powershell
+        run: |
+          dotnet run --project windows/tests/Conversion.Tests.csproj -- "$PWD\windows\vendor\ffmpeg\ffmpeg.exe"
+          if ($LASTEXITCODE -ne 0) { throw 'Conversion tests failed.' }
+      - name: Build and sign private test package
+        shell: powershell
+        run: .\windows\scripts\Build.ps1 -FFmpegDirectory "$PWD\windows\vendor\ffmpeg"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ConvertRight-Windows-0.1.0-Test
+          path: windows/out/ConvertRight-Windows-0.1.0-Test.zip
+          if-no-files-found: error
+          retention-days: 14

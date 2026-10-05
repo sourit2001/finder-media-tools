@@ -1,0 +1,4 @@
+LIBRARY ConvertRightShell
+EXPORTS
+  DllGetClassObject
+  DllCanUnloadNow
