@@ -13,7 +13,7 @@ try {
     Add-Type -AssemblyName UIAutomationClient
     Add-Type -AssemblyName UIAutomationTypes
     $window = [System.Windows.Automation.AutomationElement]::FromHandle($app.MainWindowHandle)
-    foreach ($name in @('Add files…','Convert','Enable right-click menu','Remove right-click menu')) {
+    foreach ($name in @("Add files$([char]0x2026)",'Convert','Enable right-click menu','Remove right-click menu')) {
         $condition = New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::NameProperty,$name)
         if (-not $window.FindFirst([System.Windows.Automation.TreeScope]::Descendants,$condition)) { throw "Missing UI control: $name" }
     }
