@@ -17,7 +17,8 @@ Copy-Item (Join-Path $FFmpegDirectory 'ffmpeg.exe') $bundle
 Copy-Item (Join-Path $FFmpegDirectory 'licenses') (Join-Path $bundle 'licenses') -Recurse
 Copy-Item (Join-Path $FFmpegDirectory 'SOURCE.txt') (Join-Path $bundle 'FFMPEG-SOURCE.txt')
 Copy-Item (Join-Path $root 'InstallationGuide.md') $bundle
-Get-ChildItem $bundle -File | Get-FileHash -Algorithm SHA256 | Format-Table -AutoSize | Out-File (Join-Path $bundle 'SHA256.txt')
+$hashes = Get-ChildItem $bundle -File | Get-FileHash -Algorithm SHA256
+$hashes | Format-List | Out-File (Join-Path $bundle 'SHA256.txt')
 $zip = "$bundle.zip"
 Compress-Archive -Path $bundle -DestinationPath $zip -Force
 Write-Host "Created $zip"

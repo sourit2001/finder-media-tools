@@ -1,87 +1,26 @@
 # ConvertRight for Windows 11
 
-Windows 11 x64 implementation, version 0.1.0. Not a verified public release yet.
+The default distribution is a portable Windows 11 x64 application. Extract the ZIP and open ConvertRight.exe. The self-contained application includes its .NET runtime and FFmpeg; users do not install certificates or request administrator permission.
 
-The native C++ Explorer extension implements `IExplorerCommand`, filtering audio/video
-selections and exposing MP3/M4A/WAV subcommands in the modern context menu. It starts
-a separate self-contained .NET worker using a UTF-16 request file, avoiding command
-line size limits and shell interpolation of media paths. The worker invokes bundled
-FFmpeg with a structured argument list. No media is uploaded.
+The window accepts audio/video files through drag-and-drop or a file picker, offers MP3/M4A/WAV, shows batch progress and individual results, and reveals completed outputs in File Explorer. Originals remain unchanged and existing outputs are never overwritten.
 
-Outputs go beside the source. FFmpeg writes a unique temporary file; successful
-outputs are renamed without replacing an existing file. Failures remove temporary
-files. Files without audio fail individually. The worker serializes conversion
-batches so free-trial counts cannot race between Explorer requests.
+The optional right-click menu uses the native IExplorerCommand DLL registered under HKCU only. In Windows 11 it is available through Show more options. Enable/remove registration from the application window; keep the portable folder in place or enable registration again after moving it. No registry changes occur merely by opening the app.
 
-## Build on Windows
+## Build
 
-Install Visual Studio 2022 or newer with Desktop development with C++, Windows 11
-SDK, CMake, and the .NET 10 SDK. The actual installer includes the .NET runtime;
-end users do not need these development tools.
-
-Supply a Windows x64 FFmpeg distribution in a local folder:
-
-```
-vendor/ffmpeg/ffmpeg.exe
-vendor/ffmpeg/licenses/<complete license files>
-vendor/ffmpeg/SOURCE.txt
-```
-
-`SOURCE.txt` must identify the exact version, build download URL, SHA-256,
-build configuration, corresponding source download and licenses. The build script
-does not download an unpinned third-party binary. FFmpeg must include `libmp3lame`,
-AAC and PCM encoding. Check the chosen build's complete distribution requirements
-before publishing; the macOS FFmpeg binary cannot be used on Windows.
-
-From PowerShell in `windows`:
+Use Windows with Visual Studio C++ tools, CMake and .NET 10 SDK:
 
 ```powershell
 .\scripts\Prepare-FFmpeg.ps1
-dotnet run --project tests/Conversion.Tests.csproj -- "C:\path\to\ffmpeg.exe"
-.\scripts\Build.ps1 -FFmpegDirectory "C:\path\to\ffmpeg-folder"
+dotnet run --project tests/Conversion.Tests.csproj -- "$PWD\vendor\ffmpeg\ffmpeg.exe"
+.\scripts\Build-Portable.ps1 -FFmpegDirectory "$PWD\vendor\ffmpeg"
+.\scripts\Smoke-Portable.ps1
 ```
 
-`Prepare-FFmpeg.ps1` prepares a pinned Gyan FFmpeg 9.0.2 essentials build, checks
-the archive SHA-256 from its release metadata, and retains upstream documents and
-build configuration. You can also supply your own suitably documented FFmpeg build.
+Output: `out/ConvertRight-Windows-0.1.0-x64.zip`. Includes the executable, shell DLL, FFmpeg, complete upstream license texts, source details and guide. Build.ps1 remains an alternative developer MSIX packaging tool; it is not used by the default download workflow.
 
-The build produces `out/ConvertRight-Windows-0.1.0-x64.zip`, containing a signed
-MSIX, exported public test certificate, install/uninstall scripts and test guide.
-The private key stays in the builder's certificate store and is never exported.
-The shell build treats compiler warnings as errors; MakeAppx validates the manifest.
+## Licensing and verification
 
-## Test and production signing
+Five successful conversions are free. License state is retained under `%LOCALAPPDATA%\ConvertRight`; Windows and Mac identities are separate. Windows paid checkout remains disabled until the corresponding server routes are deployed and verified. This is not yet a verified commercial release.
 
-Test builds are signed by `CN=ConvertRight Development`. Installation trusts that
-publisher in **Local Machine / Trusted People**, requiring a Windows administrator
-prompt. No root CA is installed. The app package is then installed for the original
-user. This test flow is not the public distribution experience.
-
-For production, use a trusted signing certificate via `-CertificateThumbprint` or
-integrate a managed signing service. Production installation should use Windows App
-Installer directly; do not ship the development certificate trust scripts.
-Changing Publisher changes package identity, so plan the beta-to-production transition.
-
-## Purchases
-
-Each Windows user installation has a permanent `windows-<UUID>` ID in
-`%LOCALAPPDATA%\ConvertRight\license-v1.json`, independent of macOS IDs. The server
-derives the payment callback scheme from the stored installation ID; Windows uses
-`convertright://unlock`, macOS retains `finderaudiotools://unlock`.
-
-Five successful file conversions are free. Ordinary updates/reinstalls retain
-usage and purchase identity. The paid license is checked after seven days, with
-a fourteen-day maximum offline window after a successful check, matching the Mac
-implementation. Like the current Mac client, the trial uses local state; it is not
-tamper-resistant and it is scoped to a user installation rather than hardware.
-
-Payments are disabled by default in test packages. Only use `-EnablePayments` after
-deploying and verifying the modified checkout, return, activation and status routes
-from the sibling `landing-page` project. No database migration or new Creem product
-is required: independent installation IDs produce separate purchases for each OS.
-
-## Acceptance
-
-Read [InstallationGuide.md](InstallationGuide.md). Compile success is not proof that Explorer loads the
-extension; final acceptance requires installation and real right-click conversions
-on a Windows 11 x64 computer, plus a verified checkout/refund flow before publishing.
+The CI executes real FFmpeg conversion tests, compiles the native DLL, publishes the portable app, opens its window and checks its controls. Real Windows 11 hardware acceptance is still required for Explorer integration and the complete purchase/refund flow. See InstallationGuide.md.
