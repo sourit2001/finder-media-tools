@@ -4,7 +4,7 @@
 
 ## 安装
 
-1. 解压测试 ZIP 到一个文件夹，双击 `Install-Test.cmd`。
+1. 解压测试 ZIP 到一个文件夹，双击 `Install.cmd`。
 2. Windows 会请求管理员权限，以信任本测试包的开发证书。
 3. 看到 Installed 后，关闭并重新打开文件资源管理器。
 4. 找一个视频文件，右键查看 ConvertRight，选择 MP3 / M4A / WAV。

@@ -45,7 +45,7 @@ dotnet run --project tests/Conversion.Tests.csproj -- "C:\path\to\ffmpeg.exe"
 the archive SHA-256 from its release metadata, and retains upstream documents and
 build configuration. You can also supply your own suitably documented FFmpeg build.
 
-The build produces `out/ConvertRight-Windows-0.1.0-Test.zip`, containing a signed
+The build produces `out/ConvertRight-Windows-0.1.0-x64.zip`, containing a signed
 MSIX, exported public test certificate, install/uninstall scripts and test guide.
 The private key stays in the builder's certificate store and is never exported.
 The shell build treats compiler warnings as errors; MakeAppx validates the manifest.
@@ -82,6 +82,6 @@ is required: independent installation IDs produce separate purchases for each OS
 
 ## Acceptance
 
-Read [TESTING.md](TESTING.md). Compile success is not proof that Explorer loads the
+Read [InstallationGuide.md](InstallationGuide.md). Compile success is not proof that Explorer loads the
 extension; final acceptance requires installation and real right-click conversions
 on a Windows 11 x64 computer, plus a verified checkout/refund flow before publishing.

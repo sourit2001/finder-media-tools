@@ -7,7 +7,7 @@ try {
     Write-Host "Certificate fingerprint: $($certificate.Thumbprint)"
     # Only certificate trust is elevated; install the app for the original user.
     if (-not (Test-Path "Cert:/LocalMachine/TrustedPeople/$($certificate.Thumbprint)")) {
-        $trustScript = Join-Path $PSScriptRoot 'Trust-TestCertificate.ps1'
+        $trustScript = Join-Path $PSScriptRoot 'TrustCertificate.ps1'
         $process = Start-Process powershell.exe -Verb RunAs -Wait -PassThru -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$trustScript`""
         if ($process.ExitCode -ne 0) { throw 'Test certificate trust was cancelled or failed.' }
     }

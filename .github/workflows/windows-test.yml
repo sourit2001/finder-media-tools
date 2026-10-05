@@ -29,7 +29,7 @@ jobs:
         run: .\windows\scripts\Build.ps1 -FFmpegDirectory "$PWD\windows\vendor\ffmpeg"
       - uses: actions/upload-artifact@v4
         with:
-          name: ConvertRight-Windows-0.1.0-Test
-          path: windows/out/ConvertRight-Windows-0.1.0-Test.zip
+          name: ConvertRight-Windows-0.1.0-x64
+          path: windows/out/ConvertRight-Windows-0.1.0-x64.zip
           if-no-files-found: error
           retention-days: 14

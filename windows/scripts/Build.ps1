@@ -7,7 +7,7 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
 $out = Join-Path $root 'out'
 $stage = Join-Path $out 'stage'
-$bundle = Join-Path $out 'ConvertRight-Windows-0.1.0-Test'
+$bundle = Join-Path $out 'ConvertRight-Windows-0.1.0-x64'
 if (-not (Test-Path (Join-Path $FFmpegDirectory 'ffmpeg.exe'))) { throw 'FFmpegDirectory must contain ffmpeg.exe.' }
 if (-not (Test-Path (Join-Path $FFmpegDirectory 'licenses'))) { throw 'Include the complete FFmpeg license texts in a licenses folder.' }
 if (-not (Test-Path (Join-Path $FFmpegDirectory 'SOURCE.txt'))) { throw 'Include SOURCE.txt with exact FFmpeg version, build source URL, checksum and corresponding source URL.' }
@@ -70,11 +70,11 @@ CheckExit 'MSIX packaging'
 & $signtool sign /fd SHA256 /sha1 $certificate.Thumbprint $msix
 CheckExit 'MSIX signing'
 Export-Certificate -Cert $certificate -FilePath (Join-Path $bundle 'ConvertRight.cer') | Out-Null
-Copy-Item (Join-Path $root 'scripts/Install-Test.ps1') $bundle
-Copy-Item (Join-Path $root 'scripts/Install-Test.cmd') $bundle
-Copy-Item (Join-Path $root 'scripts/Trust-TestCertificate.ps1') $bundle
+Copy-Item (Join-Path $root 'scripts/Install.ps1') $bundle
+Copy-Item (Join-Path $root 'scripts/Install.cmd') $bundle
+Copy-Item (Join-Path $root 'scripts/TrustCertificate.ps1') $bundle
 Copy-Item (Join-Path $root 'scripts/Uninstall.ps1') $bundle
-Copy-Item (Join-Path $root 'TESTING.md') $bundle
+Copy-Item (Join-Path $root 'InstallationGuide.md') $bundle
 Get-FileHash $msix -Algorithm SHA256 | Format-List | Out-File (Join-Path $bundle 'SHA256.txt')
 $zip = "$bundle.zip"
 Compress-Archive -Path "$bundle/*" -DestinationPath $zip -Force
