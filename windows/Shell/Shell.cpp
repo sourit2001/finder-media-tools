@@ -55,7 +55,7 @@ class CommandEnumerator : public RuntimeClass<RuntimeClassFlags<ClassicCom>, IEn
     std::vector<ComPtr<IExplorerCommand>> commands;
     size_t cursor = 0;
 public:
-    CommandEnumerator(std::vector<ComPtr<IExplorerCommand>> value, size_t position = 0) : commands(std::move(value)), cursor(position) {}
+    CommandEnumerator(std::vector<ComPtr<IExplorerCommand>> entries, size_t position = 0) : commands(std::move(entries)), cursor(position) {}
     IFACEMETHODIMP Next(ULONG count, IExplorerCommand** result, ULONG* fetched) override {
         if (!result || (!fetched && count != 1)) return E_POINTER;
         ULONG completed = 0;
@@ -82,7 +82,7 @@ public:
 class Command : public RuntimeClass<RuntimeClassFlags<ClassicCom>, IExplorerCommand>, private Counted {
     std::wstring format;
 public:
-    explicit Command(std::wstring value = L"") : format(std::move(value)) {}
+    explicit Command(std::wstring outputFormat = L"") : format(std::move(outputFormat)) {}
     IFACEMETHODIMP GetTitle(IShellItemArray* items, PWSTR* title) override {
         if (!title) return E_POINTER;
         if (!format.empty()) {
@@ -115,8 +115,8 @@ public:
         *result = nullptr;
         if (!format.empty()) return E_NOTIMPL;
         std::vector<ComPtr<IExplorerCommand>> children;
-        for (const auto* value : {L"mp3", L"m4a", L"wav"}) {
-            auto child = Make<Command>(std::wstring(value));
+        for (const auto* outputFormat : {L"mp3", L"m4a", L"wav"}) {
+            auto child = Make<Command>(std::wstring(outputFormat));
             if (!child) return E_OUTOFMEMORY;
             ComPtr<IExplorerCommand> command;
             HRESULT hr = child.As(&command);
