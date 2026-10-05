@@ -1,11 +1,15 @@
 $ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
 $root = Split-Path $PSScriptRoot -Parent
 $vendor = Join-Path $root 'vendor/ffmpeg'
 $archive = Join-Path $root 'vendor/ffmpeg-9.0.2-essentials_build.zip'
 $url = 'https://github.com/GyanD/codexffmpeg/releases/download/9.0.2/ffmpeg-9.0.2-essentials_build.zip'
 $expected = '60f467265b1e312373dbcd92200c2618a74850f98d3d078e94296bb3fa2047ba'
 New-Item -ItemType Directory -Force (Split-Path $archive) | Out-Null
-if (-not (Test-Path $archive)) { Invoke-WebRequest -Uri $url -OutFile $archive }
+if (-not (Test-Path $archive)) {
+    & curl.exe --fail --location --retry 3 --max-time 300 --output $archive $url
+    if ($LASTEXITCODE -ne 0) { throw 'FFmpeg archive download failed.' }
+}
 if ((Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expected) { throw 'FFmpeg archive checksum mismatch.' }
 $expanded = Join-Path $root 'vendor/expanded'
 if (Test-Path $expanded) { Remove-Item -Recurse -Force $expanded }
