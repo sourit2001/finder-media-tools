@@ -74,6 +74,7 @@ int main(int argc, const char *argv[]) {
         NSMenu *presets = [[NSMenu alloc] initWithTitle:@"Compress Video"];
         [presets addItem:[self itemWithTitle:@"Quick Compress" action:@selector(compressQuick:)]];
         [presets addItem:NSMenuItem.separatorItem];
+        [presets addItem:[self itemWithTitle:@"Under 10 MB" action:@selector(compress10:)]];
         [presets addItem:[self itemWithTitle:@"Under 20 MB" action:@selector(compress20:)]];
         [presets addItem:[self itemWithTitle:@"Under 50 MB" action:@selector(compress50:)]];
         [presets addItem:[self itemWithTitle:@"Under 100 MB" action:@selector(compress100:)]];
@@ -137,6 +138,7 @@ int main(int argc, const char *argv[]) {
 }
 
 - (void)compressQuick:(id)sender { [self compressSelectedItems:@"quick"]; }
+- (void)compress10:(id)sender { [self compressSelectedItems:@"10"]; }
 - (void)compress20:(id)sender { [self compressSelectedItems:@"20"]; }
 - (void)compress50:(id)sender { [self compressSelectedItems:@"50"]; }
 - (void)compress100:(id)sender { [self compressSelectedItems:@"100"]; }

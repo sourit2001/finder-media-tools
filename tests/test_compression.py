@@ -55,7 +55,7 @@ def main():
         generate(large, '-f', 'lavfi', '-i', 'testsrc2=size=1920x1080:rate=30', '-f', 'lavfi', '-i', 'sine=frequency=440:sample_rate=48000', '-t', '35', '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '0', '-c:a', 'aac')
         original_hash = digest(large)
         assert large.stat().st_size > 100_000_000
-        for limit in (20, 50, 100):
+        for limit in (10, 20, 50, 100):
             event = results(run(limit, [large]), 'success')[0]
             print(f'PASS preset {limit} MB: {event["outputBytes"] / 1e6:.2f} MB', flush=True)
         first = results(run(1, [large], '720', 'mute'), 'success')[0]

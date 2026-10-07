@@ -84,7 +84,7 @@ static void DeleteStoredValue(NSString *key) {
             if ([item.name isEqual:@"target"]) target = item.value;
             if ([item.name isEqual:@"path"] && item.value.isAbsolutePath && [videos containsObject:item.value.pathExtension.lowercaseString]) [paths addObject:item.value];
         }
-        if (![@[@"quick", @"20", @"50", @"100", @"custom"] containsObject:target] || !paths.count) return;
+        if (![@[@"quick", @"10", @"20", @"50", @"100", @"custom"] containsObject:target] || !paths.count) return;
         self.pendingDialogs += 1;
         NSDictionary *options = [target isEqual:@"custom"] ? CompressionOptions() : @{@"mb": @([target isEqual:@"quick"] ? 0 : target.doubleValue), @"resolution": @"auto", @"mute": @NO};
         if (options) [self authorizePaths:paths action:^{ [self startCompression:paths options:options]; }];
