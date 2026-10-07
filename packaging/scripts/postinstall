@@ -1,0 +1,57 @@
+#!/bin/zsh
+
+set -u
+
+app_path="/Applications/RightClick Converter.app"
+legacy_app_name="Finder Audio Tools.app"
+extension_path="${app_path}/Contents/PlugIns/FinderAudioExtension.appex"
+extension_identifier="com.finderaudiotools.extension"
+
+remove_legacy_app() {
+    candidate="$1"
+    bundle_id=$(/usr/bin/defaults read "${candidate}/Contents/Info" CFBundleIdentifier 2>/dev/null || true)
+    if [[ "${bundle_id}" == "com.finderaudiotools.app" ]]; then
+        /bin/rm -rf "${candidate}"
+    fi
+}
+
+remove_legacy_app "/Applications/${legacy_app_name}"
+console_user=$(/usr/bin/stat -f '%Su' /dev/console)
+if [[ -n "${console_user}" && "${console_user}" != "root" && "${console_user}" != "loginwindow" ]]; then
+    remove_legacy_app "/Users/${console_user}/Applications/${legacy_app_name}"
+fi
+
+/bin/rm -rf \
+    "/Library/Services/转换为 MP3.workflow" \
+    "/Library/Services/转换为 M4A.workflow" \
+    "/Library/Services/转换为 WAV.workflow" \
+    "/Library/Services/提取音频….workflow" \
+    "/Library/Application Support/Finder Audio Tools"
+
+/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister \
+    -f "${app_path}" 2>/dev/null || true
+/usr/bin/pluginkit -a "${extension_path}" 2>/dev/null || true
+
+console_user=$(/usr/bin/stat -f '%Su' /dev/console)
+if [[ -n "${console_user}" && "${console_user}" != "root" && "${console_user}" != "loginwindow" ]]; then
+    console_uid=$(/usr/bin/id -u "${console_user}")
+    /bin/launchctl asuser "${console_uid}" \
+        /usr/bin/sudo -u "${console_user}" \
+        /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "${app_path}" 2>/dev/null || true
+    /bin/launchctl asuser "${console_uid}" \
+        /usr/bin/sudo -u "${console_user}" \
+        /usr/bin/pluginkit -a "${extension_path}" 2>/dev/null || true
+    /bin/launchctl asuser "${console_uid}" \
+        /usr/bin/sudo -u "${console_user}" \
+        /usr/bin/pluginkit -e use -i "${extension_identifier}" 2>/dev/null || true
+    # Drop the old extension process after a bundle upgrade. Audio workers and
+    # purchase preferences are left alone.
+    /bin/launchctl asuser "${console_uid}" \
+        /usr/bin/sudo -u "${console_user}" \
+        /usr/bin/killall FinderAudioExtension 2>/dev/null || true
+fi
+
+/System/Library/CoreServices/pbs -flush 2>/dev/null || true
+/System/Library/CoreServices/pbs -update 2>/dev/null || true
+
+exit 0

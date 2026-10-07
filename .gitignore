@@ -3,3 +3,9 @@
 build/
 DerivedData/
 
+
+dist/
+vendor/ffmpeg/arm64/ffmpeg
+vendor/ffmpeg/arm64/ffprobe
+vendor/ffmpeg/arm64/licenses/
+vendor/helper/arm64/FormatPicker.app/

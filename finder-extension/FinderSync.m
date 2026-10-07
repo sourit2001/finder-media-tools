@@ -66,6 +66,21 @@ int main(int argc, const char *argv[]) {
     [formats addItem:[self itemWithTitle:@"WAV" action:@selector(convertToWAV:)]];
     parent.submenu = formats;
     [menu addItem:parent];
+    NSSet *videos = [NSSet setWithArray:@[@"mp4", @"mov", @"m4v", @"mkv", @"webm", @"avi"]];
+    BOOL hasVideo = NO;
+    for (NSURL *url in selectedURLs) if ([videos containsObject:url.pathExtension.lowercaseString]) hasVideo = YES;
+    if (hasVideo) {
+        NSMenuItem *compression = [[NSMenuItem alloc] initWithTitle:@"Compress Video" action:nil keyEquivalent:@""];
+        NSMenu *presets = [[NSMenu alloc] initWithTitle:@"Compress Video"];
+        [presets addItem:[self itemWithTitle:@"Quick Compress" action:@selector(compressQuick:)]];
+        [presets addItem:NSMenuItem.separatorItem];
+        [presets addItem:[self itemWithTitle:@"Under 20 MB" action:@selector(compress20:)]];
+        [presets addItem:[self itemWithTitle:@"Under 50 MB" action:@selector(compress50:)]];
+        [presets addItem:[self itemWithTitle:@"Under 100 MB" action:@selector(compress100:)]];
+        [presets addItem:[self itemWithTitle:@"Custom Size…" action:@selector(compressCustom:)]];
+        compression.submenu = presets;
+        [menu addItem:compression];
+    }
     return menu;
 }
 
@@ -121,6 +136,19 @@ int main(int argc, const char *argv[]) {
     return NO;
 }
 
+- (void)compressQuick:(id)sender { [self compressSelectedItems:@"quick"]; }
+- (void)compress20:(id)sender { [self compressSelectedItems:@"20"]; }
+- (void)compress50:(id)sender { [self compressSelectedItems:@"50"]; }
+- (void)compress100:(id)sender { [self compressSelectedItems:@"100"]; }
+- (void)compressCustom:(id)sender { [self compressSelectedItems:@"custom"]; }
+- (void)compressSelectedItems:(NSString *)target {
+    NSArray<NSURL *> *urls = [FIFinderSyncController defaultController].selectedItemURLs;
+    NSSet *videos = [NSSet setWithArray:@[@"mp4", @"mov", @"m4v", @"mkv", @"webm", @"avi"]];
+    NSMutableArray<NSString *> *paths = [NSMutableArray array];
+    for (NSURL *url in urls) if (url.isFileURL && [videos containsObject:url.pathExtension.lowercaseString]) [paths addObject:url.path];
+    [self dispatchPaths:paths operation:@"compress" option:target];
+}
+
 - (void)convertToMP3:(id)sender { [self convertSelectedItemsToFormat:@"mp3"]; }
 - (void)convertToM4A:(id)sender { [self convertSelectedItemsToFormat:@"m4a"]; }
 - (void)convertToWAV:(id)sender { [self convertSelectedItemsToFormat:@"wav"]; }
@@ -135,6 +163,10 @@ int main(int argc, const char *argv[]) {
             [paths addObject:url.path];
         }
     }
+    [self dispatchPaths:paths operation:@"convert" option:format];
+}
+
+- (void)dispatchPaths:(NSArray<NSString *> *)paths operation:(NSString *)operation option:(NSString *)option {
     if (paths.count == 0) {
         NSLog(@"Finder Audio Tools found no supported selected files");
         return;
@@ -142,9 +174,9 @@ int main(int argc, const char *argv[]) {
 
     NSURLComponents *components = [[NSURLComponents alloc] init];
     components.scheme = @"finderaudiotools";
-    components.host = @"convert";
+    components.host = operation;
     NSMutableArray<NSURLQueryItem *> *items = [NSMutableArray arrayWithObject:
-        [NSURLQueryItem queryItemWithName:@"format" value:format]];
+        [NSURLQueryItem queryItemWithName:([operation isEqual:@"compress"] ? @"target" : @"format") value:option]];
     for (NSString *path in paths) {
         [items addObject:[NSURLQueryItem queryItemWithName:@"path" value:path]];
     }

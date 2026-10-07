@@ -1,4 +1,4 @@
-RightClick Converter 0.6
+RightClick Converter 0.7
 
 System requirements: Apple Silicon Mac running macOS 13 or later.
 
@@ -9,7 +9,9 @@ Installation:
 3. After installation, select a video or audio file in Finder.
 4. Right-click a video and choose Extract Audio As…, or right-click an audio file and choose Convert Audio To…; then select MP3, M4A, or WAV.
 
-No additional window will appear after you select a format. The converted file will be created next to the original file.
+To compress a video, choose Compress Video → Quick Compress, Under 20 MB, Under 50 MB, Under 100 MB, or Custom Size…. A small progress window lets you cancel and show finished files in Finder. Custom Size also offers resolution and audio options. Each selected video receives its own size limit.
+
+Audio conversion does not open an additional window. The converted file will be created next to the original file.
 If the right-click menu does not appear, go to “System Settings → General → Login Items & Extensions → File Providers”,
 make sure Finder Audio Tools is enabled, then reopen the Finder window.
 
