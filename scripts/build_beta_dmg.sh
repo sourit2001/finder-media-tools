@@ -5,7 +5,7 @@ export COPYFILE_DISABLE=1
 
 script_directory="${0:A:h}"
 project_directory="${script_directory:h}"
-version="0.7.0"
+version="0.7.1"
 build_directory="${project_directory}/build"
 dist_directory="${project_directory}/dist"
 pkg_root_directory="${build_directory}/pkg-root"

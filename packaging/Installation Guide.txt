@@ -1,4 +1,4 @@
-RightClick Converter 0.7
+RightClick Converter 0.7.1
 
 System requirements: Apple Silicon Mac running macOS 13 or later.
 

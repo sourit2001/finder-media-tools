@@ -1,6 +1,6 @@
 # ConvertRight / RightClick Converter for Mac
 
-当前版本：`0.7.0`（本地测试版）。Apple Silicon，macOS 13 或更高版本。
+当前版本：`0.7.1`（本地测试版）。Apple Silicon，macOS 13 或更高版本。
 
 在 Finder 右键视频或音频即可转换，处理完全在本机进行。视频压缩会显示原生玻璃效果的小进度窗口；不覆盖原文件。
 
@@ -100,8 +100,8 @@ vendor/ffmpeg/arm64/ffmpeg
 输出位于：
 
 ```text
-dist/RightClick-Converter-0.7.0.dmg
-dist/RightClick-Converter-0.7.0.dmg.sha256
+dist/RightClick-Converter-0.7.1.dmg
+dist/RightClick-Converter-0.7.1.dmg.sha256
 ```
 
 DMG 包含系统级 PKG、安装说明和卸载脚本。系统级安装需要输入 Mac 管理员密码。

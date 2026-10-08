@@ -53,6 +53,7 @@ fi
 /bin/cp "${project_directory}/vendor/ffmpeg/arm64/ffprobe" "${app_contents}/Resources/ffprobe"
 
 /bin/cp "${source_directory}/App-Info.plist" "${app_contents}/Info.plist"
+/bin/cp "${project_directory}/assets/ConvertRight.icns" "${app_contents}/Resources/ConvertRight.icns"
 /bin/cp "${source_directory}/Extension-Info.plist" "${extension_contents}/Info.plist"
 /bin/cp "${project_directory}/scripts/convert_media.sh" "${app_contents}/Resources/convert_media.sh"
 /bin/cp "${ffmpeg_path}" "${app_contents}/Resources/ffmpeg"
