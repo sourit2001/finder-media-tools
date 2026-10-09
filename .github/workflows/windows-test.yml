@@ -32,9 +32,9 @@ jobs:
         run: .\windows\scripts\Smoke-Portable.ps1
       - uses: actions/upload-artifact@v4
         with:
-          name: ConvertRight-Windows-0.2.0-x64
+          name: ConvertRight-Windows-0.3.0-x64
           path: |
-            windows/out/ConvertRight-Windows-0.2.0-x64.zip
+            windows/out/ConvertRight-Windows-0.3.0-x64.zip
             windows/out/portable-window.png
           if-no-files-found: error
           retention-days: 14

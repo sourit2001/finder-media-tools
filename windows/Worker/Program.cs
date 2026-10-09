@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Microsoft.Win32;
 using System.Net;
 using System.Net.Http.Json;
 using System.Runtime.InteropServices;
@@ -13,7 +14,11 @@ internal sealed class LicenseState
     public int Used { get; set; }
     public string? ActivationToken { get; set; }
     public DateTimeOffset? LastVerified { get; set; }
+    public string? PendingSessionId { get; set; }
+    public string? PendingCheckoutUrl { get; set; }
 }
+
+internal sealed record CheckoutReply(string SessionId, string CheckoutUrl);
 
 internal sealed record LicenseReply(bool Active, bool Pending, bool Retry, string? ActivationToken);
 
@@ -43,7 +48,7 @@ internal static class Program
     internal static async Task<string> ConvertFile(string input, string format, CompressionOptions? compression = null, CancellationToken cancellation = default)
     {
         // A semaphore file protects license accounting across GUI and Explorer processes.
-        using var lease = new FileStream(Path.Combine(DataDirectory, "conversion.lock"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+        using var lease = await AcquireLease();
         var state = Load();
         if (!await Authorize(state, 1)) throw new IOException("Conversion was not authorized. Check your free conversions or purchase status.");
         var result = compression is null
@@ -66,7 +71,7 @@ internal static class Program
 
     private static void Save(LicenseState state)
     {
-        var pending = StatePath + ".tmp";
+        var pending = StatePath + $".{Guid.NewGuid():N}.tmp";
         File.WriteAllText(pending, JsonSerializer.Serialize(state));
         File.Move(pending, StatePath, overwrite: true);
     }
@@ -88,21 +93,13 @@ internal static class Program
                 .FirstOrDefault(part => part.Length == 2 && part[0] == "session");
             var session = query is null ? "" : Uri.UnescapeDataString(query[1]);
             if (!Guid.TryParse(session, out _)) throw new ArgumentException("Invalid payment confirmation link.");
-            for (var attempt = 0; attempt < 11; attempt++)
-            {
-                var reply = await Post("api/license/activate", new { sessionId = session, installationId = state.InstallationId, platform = "windows" });
-                if (reply.Active && reply.ActivationToken?.Length == 64)
-                {
-                    state.ActivationToken = reply.ActivationToken;
-                    state.LastVerified = DateTimeOffset.UtcNow;
-                    Save(state);
-                    Message("Unlimited conversions unlocked for this Windows PC.\nReturn to File Explorer and convert any file.");
-                    return 0;
-                }
-                if (!reply.Pending && !reply.Retry) throw new IOException("This purchase could not be activated for this Windows PC.");
-                await Task.Delay(2000);
+            using var callbackLease = await AcquireLease();
+            state = Load();
+            if (await ActivatePurchase(state, session, true)) {
+                Message("Unlimited conversions unlocked for this Windows PC. Return to ConvertRight; your open window will refresh automatically.");
+                return 0;
             }
-            Message("Payment is still being confirmed. Refresh the payment confirmation page in your browser to retry activation. You do not need to pay again.");
+            Message("Payment has not been confirmed yet. In ConvertRight choose Restore purchase to retry. Do not pay again.");
             return 2;
         }
         if (args.Length != 2 || args[0] != "--request")
@@ -168,15 +165,67 @@ internal static class Program
             Message($"You have {remaining} free conversions left, but selected {count} files. Select fewer files and try again.");
             return false;
         }
-        // Test builds never initiate a real payment against an undeployed backend.
-        if (!File.Exists(Path.Combine(AppContext.BaseDirectory, "payments-enabled.txt")))
-        {
-            Message("Your five free conversions are complete. Windows purchases are not available yet. Your existing files and completed conversions remain available.");
-            return false;
-        }
-        if (MessageBoxW(IntPtr.Zero, "Your five free conversions are complete.\nPay $1 once to unlock this Windows PC. Mac licenses are purchased separately.\n\nContinue to payment?", "ConvertRight", 0x24) == 6)
-            Open($"https://convertright.app/api/checkout?platform=windows&installation_id={Uri.EscapeDataString(state.InstallationId)}");
+        if (state.PendingSessionId is not null && await ActivatePurchase(state, state.PendingSessionId, false)) return true;
+        if (MessageBoxW(IntPtr.Zero, "Your five free conversions are complete. Pay $1 once to unlock this Windows PC. Mac licenses are purchased separately. Continue to payment?", "ConvertRight", 0x24) == 6)
+            await BeginPurchase(state);
         return false;
+    }
+
+    private static async Task<FileStream> AcquireLease()
+    {
+        for (var attempt = 0; attempt < 60; attempt++) {
+            try { return new FileStream(Path.Combine(DataDirectory, "conversion.lock"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None); }
+            catch (IOException) when (attempt < 59) { await Task.Delay(500); }
+        }
+        throw new IOException("Another conversion is still running. Wait for it to finish, then choose Restore purchase.");
+    }
+
+    internal static void RegisterPaymentProtocol()
+    {
+        const string protocol = @"Software\Classes\convertright";
+        using (var key = Registry.CurrentUser.CreateSubKey(protocol)) { key.SetValue("", "URL:ConvertRight"); key.SetValue("URL Protocol", ""); }
+        using (var key = Registry.CurrentUser.CreateSubKey(protocol + @"\shell\open\command")) key.SetValue("", $"\"{Environment.ProcessPath}\" \"%1\"");
+    }
+
+    private static bool ValidCheckoutUrl(string value) => Uri.TryCreate(value, UriKind.Absolute, out var uri) && uri.Scheme == "https" && (uri.Host == "creem.io" || uri.Host.EndsWith(".creem.io", StringComparison.OrdinalIgnoreCase));
+
+    private static async Task BeginPurchase(LicenseState state)
+    {
+        RegisterPaymentProtocol();
+        if (state.PendingSessionId is not null && state.PendingCheckoutUrl is { } pending && ValidCheckoutUrl(pending)) { Open(pending); return; }
+        using var response = await Client.GetAsync($"api/checkout?platform=windows&format=json&installation_id={Uri.EscapeDataString(state.InstallationId)}");
+        if (!response.IsSuccessStatusCode) throw new IOException("Unable to begin payment. Please try again later. No payment has been taken by the app.");
+        var checkout = await response.Content.ReadFromJsonAsync<CheckoutReply>(JsonOptions);
+        if (checkout is null || !Guid.TryParse(checkout.SessionId, out _) || !ValidCheckoutUrl(checkout.CheckoutUrl)) throw new IOException("The payment service returned an invalid checkout link.");
+        state.PendingSessionId = checkout.SessionId; state.PendingCheckoutUrl = checkout.CheckoutUrl;
+        Save(state); // Persist recovery before opening the browser.
+        Open(checkout.CheckoutUrl);
+    }
+
+    internal static async Task<bool> ActivatePurchase(LicenseState state, string session, bool wait)
+    {
+        for (var attempt = 0; attempt < (wait ? 11 : 1); attempt++)
+        {
+            var reply = await Post("api/license/activate", new { sessionId = session, installationId = state.InstallationId, platform = "windows" });
+            if (reply.Active && reply.ActivationToken?.Length == 64)
+            {
+                state.ActivationToken = reply.ActivationToken; state.LastVerified = DateTimeOffset.UtcNow;
+                state.PendingSessionId = null; state.PendingCheckoutUrl = null; Save(state); return true;
+            }
+            if (!reply.Pending && !reply.Retry) throw new IOException("This order cannot activate this Windows PC. Check the purchasing installation or contact support.");
+            if (wait && attempt < 10) await Task.Delay(2000);
+        }
+        return false;
+    }
+
+    internal static async Task PurchaseOrRestore(bool restore)
+    {
+        using var lease = await AcquireLease();
+        var state = Load();
+        if (state.ActivationToken is not null && await Authorize(state, 0) && state.ActivationToken is not null) { Message("This Windows PC is already unlocked."); return; }
+        if (state.PendingSessionId is { } session && await ActivatePurchase(state, session, true)) { Message("This Windows PC is now unlocked."); return; }
+        if (restore) { Message(state.PendingSessionId is null ? "No pending purchase was found on this installation. Contact support with your order reference after reinstalling." : "Payment has not been confirmed yet. Complete your existing checkout and try Restore purchase again. Do not pay again."); return; }
+        if (MessageBoxW(IntPtr.Zero, "Pay $1 once to unlock unlimited conversions on this Windows PC. Mac licenses are purchased separately. Continue?", "ConvertRight", 0x24) == 6) await BeginPurchase(state);
     }
 
     private static async Task<LicenseReply> Post(string path, object body)

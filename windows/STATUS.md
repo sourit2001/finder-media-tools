@@ -1,7 +1,7 @@
-# Windows portable 0.2.0
+# Windows portable 0.3.0
 
-Completed: local self-contained win-x64 build; target-size MP4 compression using two-pass H.264/AAC; original/maximum 1080p/720p; optional mute; cancellation; output-size check and full decode; non-overwrite output publication; bundled ffprobe; portable ZIP with runtime, FFmpeg and license notices. Existing audio conversion and optional per-user Explorer audio menu retained.
+Adds Unlock this PC and Restore purchase; registers the per-user payment callback before opening checkout independently of Explorer menu settings. Pending checkout is saved before browser launch and reused rather than creating duplicate purchases. Activation updates the open window. Existing video compression and audio functionality retained.
 
-Verified on macOS using the shared .NET compression code and real FFmpeg: 4K to 1920x1080, target size, full decode, source preservation, silent video, cancellation, existing audio regression suite. Windows executable compiled, ZIP integrity and contents verified.
+Server validates platform and installation ownership, routes callbacks from stored checkout records, preserves activation tokens on retry, and prevents paid notifications from restoring refunded licenses. Refund/dispute reconciliation supports transaction IDs and resolves legacy order mappings through Creem.
 
-Not yet verified on a real Windows PC: window interaction, drag/drop, bundled Windows FFmpeg execution, Explorer integration. Paid Windows activation remains disabled. Windows HDR input is rejected explicitly. A 5GB/10GB source has not been tested. No public deployment has been made from this checkout.
+Payment flow is tested with a local SQLite database, real signed-webhook handling and a mocked provider. Real money checkout/activation must be accepted on a Windows PC by the purchaser. Windows code is unsigned; HDR is not supported.

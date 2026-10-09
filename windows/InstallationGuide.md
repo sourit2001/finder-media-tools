@@ -6,7 +6,7 @@
 4. For MP4, set a target size in MB (2 GB = 2,000 MB), choose maximum 1080p, 720p or original resolution, and optionally remove audio. Click Cancel to stop video compression.
 5. Converted files appear alongside the originals. Existing files are never overwritten. Double-click a completed result to reveal it in File Explorer.
 
-The app includes five free successful conversions. Windows and Mac purchases are separate. Windows purchases will become available after the Windows payment service is released.
+The app includes five free successful conversions. Windows and Mac purchases are separate. Use Unlock this PC to buy a one-time $1 Windows license. Complete payment in your browser and allow it to open ConvertRight. If activation is delayed, click Restore purchase; do not pay again. Each purchase applies only to the installation that started checkout.
 
 ## Optional right-click menu
 

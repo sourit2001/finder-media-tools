@@ -17,10 +17,10 @@ dotnet run --project tests/Conversion.Tests.csproj -- "$PWD\vendor\ffmpeg\ffmpeg
 .\scripts\Smoke-Portable.ps1
 ```
 
-Output: `out/ConvertRight-Windows-0.2.0-x64.zip`. Includes the executable, shell DLL, FFmpeg and ffprobe, complete upstream license texts, source details and guide. Build.ps1 remains an alternative developer MSIX packaging tool; it is not used by the default download workflow.
+Output: `out/ConvertRight-Windows-0.3.0-x64.zip`. Includes the executable, shell DLL, FFmpeg and ffprobe, complete upstream license texts, source details and guide. Build.ps1 remains an alternative developer MSIX packaging tool; it is not used by the default download workflow.
 
 ## Licensing and verification
 
-Five successful conversions are free. License state is retained under `%LOCALAPPDATA%\ConvertRight`; Windows and Mac identities are separate. Windows paid checkout remains disabled until the corresponding server routes are deployed and verified. This is not yet a verified commercial release.
+Five successful conversions are free. License state is retained under `%LOCALAPPDATA%\ConvertRight`; Windows and Mac identities are separate. Use Unlock this PC to begin hosted Creem checkout. Pending checkout data is retained locally; Restore purchase retries activation without a second purchase. Callback registration is independent of the optional Explorer menu.
 
 The CI executes real FFmpeg conversion tests, compiles the native DLL, publishes the portable app, opens its window and checks its controls. Real Windows 11 hardware acceptance is still required for Explorer integration and the complete purchase/refund flow. See InstallationGuide.md.

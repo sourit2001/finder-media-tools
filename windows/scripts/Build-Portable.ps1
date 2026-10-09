@@ -2,7 +2,7 @@ param([Parameter(Mandatory=$true)][string]$FFmpegDirectory)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
 $out = Join-Path $root 'out'
-$bundle = Join-Path $out 'ConvertRight-Windows-0.2.0-x64'
+$bundle = Join-Path $out 'ConvertRight-Windows-0.3.0-x64'
 if (Test-Path $bundle) { Remove-Item -Recurse -Force $bundle }
 New-Item -ItemType Directory -Force $bundle | Out-Null
 function CheckExit([string]$step) { if ($LASTEXITCODE -ne 0) { throw "$step failed with exit code $LASTEXITCODE." } }

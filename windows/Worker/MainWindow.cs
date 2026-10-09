@@ -12,6 +12,8 @@ internal sealed class MainWindow : Form
     private readonly Button convert = new() { Text = "Convert", AutoSize = true };
     private readonly List<string> paths = [];
     private bool busy;
+    private bool paymentBusy;
+    private readonly System.Windows.Forms.Timer licenseRefresh = new() { Interval = 2000 };
     private CancellationTokenSource? cancellation;
     private readonly NumericUpDown target = new() { Minimum = 1, Maximum = 100000, Value = 25, Width = 95, AccessibleName = "Target size in MB" };
     private readonly ComboBox resolution = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 125, AccessibleName = "Maximum resolution" };
@@ -47,10 +49,13 @@ internal sealed class MainWindow : Form
         convert.Click += Convert;
         actions.Controls.AddRange([format, new Label { Text = "Target MB", AutoSize = true, Padding = new Padding(0, 7, 0, 0) }, target, resolution, mute, convert, cancel, status]);
         var footer = new FlowLayoutPanel { Dock = DockStyle.Fill };
-        footer.Controls.AddRange([Button("Enable right-click menu", (_, _) => Register(true)), Button("Remove right-click menu", (_, _) => Register(false))]);
+        footer.Controls.AddRange([Button("Enable right-click menu", (_, _) => Register(true)), Button("Remove right-click menu", (_, _) => Register(false)), Button("Unlock this PC", async (_, _) => await Payment(false)), Button("Restore purchase", async (_, _) => await Payment(true))]);
         layout.Controls.Add(title); layout.Controls.Add(tools); layout.Controls.Add(files); layout.Controls.Add(actions); layout.Controls.Add(footer);
         Controls.Add(layout); Controls.Add(progress);
         FormClosing += (_, e) => { if (busy) { e.Cancel = true; MessageBox.Show(this, "Please wait for the current conversion to finish.", Text); } };
+        licenseRefresh.Tick += (_, _) => { if (!busy && !paymentBusy) { try { RefreshStatus(); } catch { /* A simultaneous activation may be updating the file. */ } } };
+        licenseRefresh.Start();
+        FormClosed += (_, _) => licenseRefresh.Dispose();
         RefreshStatus();
     }
 
@@ -88,9 +93,12 @@ internal sealed class MainWindow : Form
 
     private async void Convert(object? sender, EventArgs e)
     {
-        if (busy || paths.Count == 0) return;
+        if (busy || paymentBusy || paths.Count == 0) return;
         var state = Program.Load();
-        if (!await Program.Authorize(state, paths.Count)) return;
+        paymentBusy = true; convert.Enabled = false;
+        try { if (!await Program.Authorize(state, paths.Count)) return; }
+        catch (Exception error) { MessageBox.Show(this, error.Message, Text, MessageBoxButtons.OK, MessageBoxIcon.Error); return; }
+        finally { paymentBusy = false; convert.Enabled = true; RefreshStatus(); }
         var compression = format.Text == "MP4" ? new CompressionOptions(target.Value, resolution.SelectedIndex == 0 ? 1080 : resolution.SelectedIndex == 1 ? 720 : 0, mute.Checked) : null;
         cancellation = new CancellationTokenSource();
         busy = true; convert.Enabled = format.Enabled = target.Enabled = resolution.Enabled = mute.Enabled = false; cancel.Enabled = compression is not null;
@@ -117,23 +125,31 @@ internal sealed class MainWindow : Form
         finally { if (failures.Count > 0) MessageBox.Show(this, string.Join("\n\n", failures.Take(5)), "Some files could not be converted", MessageBoxButtons.OK, MessageBoxIcon.Warning); busy = false; convert.Enabled = true; format.Enabled = true; target.Enabled = resolution.Enabled = mute.Enabled = format.Text == "MP4"; cancel.Enabled = false; cancellation.Dispose(); cancellation = null; RefreshStatus(); }
     }
 
+    private async Task Payment(bool restore)
+    {
+        if (busy || paymentBusy) return;
+        paymentBusy = true; convert.Enabled = false;
+        try { await Program.PurchaseOrRestore(restore); }
+        catch (Exception error) { MessageBox.Show(this, error.Message, Text, MessageBoxButtons.OK, MessageBoxIcon.Error); }
+        finally { paymentBusy = false; convert.Enabled = true; RefreshStatus(); }
+    }
+
     private void Register(bool enable)
     {
         try
         {
             var clsid = @"Software\Classes\CLSID\{731BA7E4-A1CC-4378-B7B5-B9755560DA12}";
             var menu = @"Software\Classes\*\shell\ConvertRight";
-            var protocol = @"Software\Classes\convertright";
+
             if (enable)
             {
                 var dll = Path.Combine(AppContext.BaseDirectory, "ConvertRightShell.dll");
                 if (!File.Exists(dll)) throw new IOException("The right-click component is missing. Extract the complete ZIP first.");
                 using (var key = Registry.CurrentUser.CreateSubKey(clsid + @"\InprocServer32")) { key.SetValue("", dll); key.SetValue("ThreadingModel", "Apartment"); }
                 using (var key = Registry.CurrentUser.CreateSubKey(menu)) { key.SetValue("MUIVerb", "ConvertRight"); key.SetValue("ExplorerCommandHandler", "{731BA7E4-A1CC-4378-B7B5-B9755560DA12}"); key.SetValue("SubCommands", ""); key.SetValue("MultiSelectModel", "Player"); }
-                using (var key = Registry.CurrentUser.CreateSubKey(protocol)) { key.SetValue("", "URL:ConvertRight"); key.SetValue("URL Protocol", ""); }
-                using (var key = Registry.CurrentUser.CreateSubKey(protocol + @"\shell\open\command")) key.SetValue("", $"\"{Environment.ProcessPath}\" \"%1\"");
+                Program.RegisterPaymentProtocol();
             }
-            else { Registry.CurrentUser.DeleteSubKeyTree(menu, false); Registry.CurrentUser.DeleteSubKeyTree(clsid, false); Registry.CurrentUser.DeleteSubKeyTree(protocol, false); }
+            else { Registry.CurrentUser.DeleteSubKeyTree(menu, false); Registry.CurrentUser.DeleteSubKeyTree(clsid, false); }
             MessageBox.Show(this, enable ? "Right-click menu enabled for your Windows account.\nChoose Show more options → ConvertRight.\nKeep this application folder in its current location. If you move it, enable the menu again." : "Right-click menu removed. You can still use this window.", Text);
         }
         catch (Exception error) { MessageBox.Show(this, error.Message, Text, MessageBoxButtons.OK, MessageBoxIcon.Error); }

@@ -1,6 +1,6 @@
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
-$bundle = Join-Path $root 'out/ConvertRight-Windows-0.2.0-x64'
+$bundle = Join-Path $root 'out/ConvertRight-Windows-0.3.0-x64'
 foreach ($file in @('ConvertRight.exe','ConvertRightShell.dll','ffmpeg.exe','ffprobe.exe','FFMPEG-SOURCE.txt','InstallationGuide.md')) {
     if (-not (Test-Path (Join-Path $bundle $file))) { throw "Missing $file" }
 }
@@ -13,7 +13,7 @@ try {
     Add-Type -AssemblyName UIAutomationClient
     Add-Type -AssemblyName UIAutomationTypes
     $window = [System.Windows.Automation.AutomationElement]::FromHandle($app.MainWindowHandle)
-    foreach ($name in @("Add files$([char]0x2026)",'Convert','Enable right-click menu','Remove right-click menu')) {
+    foreach ($name in @("Add files$([char]0x2026)",'Convert','Enable right-click menu','Remove right-click menu','Unlock this PC','Restore purchase')) {
         $condition = New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::NameProperty,$name)
         if (-not $window.FindFirst([System.Windows.Automation.TreeScope]::Descendants,$condition)) { throw "Missing UI control: $name" }
     }
