@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+ xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+ xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
+ xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
+ xmlns:virtualization="http://schemas.microsoft.com/appx/manifest/virtualization/windows10"
+ xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10"
+ xmlns:desktop4="http://schemas.microsoft.com/appx/manifest/desktop/windows10/4"
+ xmlns:desktop5="http://schemas.microsoft.com/appx/manifest/desktop/windows10/5"
+ xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+ IgnorableNamespaces="uap uap3 uap10 com desktop4 desktop5 rescap virtualization">
+ <Identity Name="ConvertRight.Windows" Publisher="CN=ConvertRight Development" Version="0.1.0.0" ProcessorArchitecture="x64" />
+ <Properties>
+  <DisplayName>ConvertRight</DisplayName>
+  <PublisherDisplayName>ConvertRight</PublisherDisplayName>
+  <Logo>Assets\StoreLogo.png</Logo>
+  <virtualization:FileSystemWriteVirtualization><virtualization:ExcludedDirectories>
+   <virtualization:ExcludedDirectory>$(KnownFolder:LocalAppData)\ConvertRight</virtualization:ExcludedDirectory>
+  </virtualization:ExcludedDirectories></virtualization:FileSystemWriteVirtualization>
+ </Properties>
+ <Dependencies><TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.22000.0" MaxVersionTested="10.0.26100.0" /></Dependencies>
+ <Resources><Resource Language="en-US" /></Resources>
+ <Applications>
+  <Application Id="App" Executable="ConvertRight.exe" EntryPoint="Windows.FullTrustApplication">
+   <uap:VisualElements DisplayName="ConvertRight" Description="Convert audio and extract video audio from File Explorer"
+    BackgroundColor="transparent" Square150x150Logo="Assets\Square150x150Logo.png" Square44x44Logo="Assets\Square44x44Logo.png" />
+   <Extensions>
+    <com:Extension Category="windows.comServer">
+     <com:ComServer><com:SurrogateServer DisplayName="ConvertRight commands">
+      <com:Class Id="731BA7E4-A1CC-4378-B7B5-B9755560DA12" Path="ConvertRightShell.dll" ThreadingModel="STA" />
+     </com:SurrogateServer></com:ComServer>
+    </com:Extension>
+    <desktop4:Extension Category="windows.fileExplorerContextMenus">
+     <desktop4:FileExplorerContextMenus><desktop5:ItemType Type="*">
+      <desktop5:Verb Id="ConvertRightAudio" Clsid="731BA7E4-A1CC-4378-B7B5-B9755560DA12" />
+     </desktop5:ItemType></desktop4:FileExplorerContextMenus>
+    </desktop4:Extension>
+    <uap:Extension Category="windows.protocol">
+     <uap3:Protocol Name="convertright" Parameters="&quot;%1&quot;"><uap:DisplayName>ConvertRight payment activation</uap:DisplayName></uap3:Protocol>
+    </uap:Extension>
+   </Extensions>
+  </Application>
+ </Applications>
+ <Capabilities><rescap:Capability Name="runFullTrust" /><rescap:Capability Name="unvirtualizedResources" /></Capabilities>
+</Package>
